@@ -27,8 +27,6 @@ public class Investor {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-//    @Column(name = "password")
-
     @Column(name = "email", nullable = false)
     private String email;
 
@@ -54,6 +52,13 @@ public class Investor {
             if (product.getType().equals(productType) && product.getCurrentBalance() > amount) return false;
         }
         return true;
+    }
+
+    public Product getProductByType(String productType){
+        for (Product product: products){
+            if (product.getType().equals(productType)) return product;
+        }
+        return null;
     }
 
     public void UpdateAge() {

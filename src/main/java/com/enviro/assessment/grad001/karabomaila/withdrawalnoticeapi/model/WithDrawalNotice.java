@@ -33,6 +33,6 @@ public class WithDrawalNotice {
     @OneToOne(mappedBy = "notice", cascade = CascadeType.ALL)
     private BankAccountInfo bankAccountInfo;
 
-    @OneToOne(mappedBy = "notice")
+    @OneToOne(mappedBy = "notice", cascade = CascadeType.MERGE)
     private Product product;
 }
