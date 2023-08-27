@@ -1,13 +1,10 @@
 package com.enviro.assessment.grad001.karabomaila.withdrawalnoticeapi.api;
 
 import com.enviro.assessment.grad001.karabomaila.withdrawalnoticeapi.Util.CSVFile;
-import com.enviro.assessment.grad001.karabomaila.withdrawalnoticeapi.model.BankAccountInfo;
-import com.enviro.assessment.grad001.karabomaila.withdrawalnoticeapi.model.Investor;
-import com.enviro.assessment.grad001.karabomaila.withdrawalnoticeapi.model.WithDrawalNotice;
+import com.enviro.assessment.grad001.karabomaila.withdrawalnoticeapi.model.*;
 import com.enviro.assessment.grad001.karabomaila.withdrawalnoticeapi.service.InvestorService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.core.ValidationErrors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +16,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
-public class NoticeAPI {
+public class InvestorAPI {
     private InvestorService investorService;
 
     @Autowired
-    public NoticeAPI(InvestorService investorService) {
+    public InvestorAPI(InvestorService investorService) {
         this.investorService = investorService;
     }
 
@@ -32,14 +29,47 @@ public class NoticeAPI {
         return investorService.findInvestorById(investorId);
     }
 
+    @PostMapping("/investor")
+    public ResponseEntity addInvestor(@RequestBody(required = true) Investor investor){
+        investorService.addInvestor(investor);
+        return new ResponseEntity("The investor information was added", HttpStatus.OK);
+    }
+
+    @PostMapping("/investor/product")
+    public ResponseEntity addInvestorProduct(@RequestParam(required = true) long investorId, @RequestParam(required = true) String name, @RequestParam(required = true) String type, @RequestParam(required = true) double amount){
+        Optional<Investor> investor = investorService.findInvestorById(investorId);
+        if (amount <= 0) return new ResponseEntity("The given amount was invalid", HttpStatus.NOT_ACCEPTABLE);
+        if (investor.isEmpty()) return new ResponseEntity("The investor was not found", HttpStatus.NOT_FOUND);
+        else if (type.equalsIgnoreCase("SAVINGS") || type.equalsIgnoreCase("RETIREMENT")){
+            Product product = new Product();
+            if (investor.get().getProductByType(type) == null) {
+                product.setInvestor(investor.get());
+                product.setType(type.toUpperCase());
+                product.setName(name);
+                product.setCurrentBalance(amount);
+                investor.get().addProduct(product);
+            }
+            else{
+                investor.get().getProductByType(type).addToCurrentBalance(amount);
+            }
+            investorService.addInvestor(investor.get());
+        }
+        else{
+            return new ResponseEntity("The selected product was not found", HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity("The product was added", HttpStatus.OK);
+    }
+
     @PostMapping("/notice")
-    public ResponseEntity createNotice(@RequestParam(required = true) long investorId,
-                                       @RequestParam(required = true) String productType,
-                                       @RequestParam(required = true) double amount,
-                                       @RequestParam(required = true) LocalDate date,
-                                       @RequestBody(required = true) BankAccountInfo bankAccountInfo) throws Exception {
+    public Notification createNotice(@RequestParam(required = true) long investorId,
+                                     @RequestParam(required = true) String productType,
+                                     @RequestParam(required = true) double amount,
+                                     @RequestParam(required = true) LocalDate date,
+                                     @RequestBody(required = true) BankAccountInfo bankAccountInfo) throws Exception {
         Optional<Investor> investor = investorService.findInvestorById(investorId);
         // check if the productType is correct and if the investor is allowed withdraw money
+        if (amount <= 0) throw  new Exception("The given amount was negative");
         if (productType.equalsIgnoreCase("SAVINGS") || productType.equalsIgnoreCase("RETIREMENT")){
             if (investor.isEmpty()) throw new Exception("The investor is not found");
             else if (investor.get().getAge() <= 65){
@@ -59,10 +89,9 @@ public class NoticeAPI {
         withDrawalNotice.setWithDrawalDate(date);
         withDrawalNotice.setBankAccountInfo(bankAccountInfo);
         withDrawalNotice.setProduct(investor.get().getProductByType(productType));
-        withDrawalNotice.setProductType(productType);
-        investorService.addNotice(withDrawalNotice);
+        withDrawalNotice.setProductType(productType.toUpperCase());
 
-        return new ResponseEntity<>("The notice was created", HttpStatus.OK);
+        return investorService.addNotice(withDrawalNotice);
     }
 
     @GetMapping("/statements")

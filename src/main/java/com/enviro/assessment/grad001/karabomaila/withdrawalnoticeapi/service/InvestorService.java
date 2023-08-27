@@ -32,7 +32,7 @@ public class InvestorService {
         investorRepository.save(investor);
     }
 
-    public void addNotice(WithDrawalNotice withDrawalNotice) throws Exception {
+    public Notification addNotice(WithDrawalNotice withDrawalNotice) throws Exception {
         if (withDrawalNotice.getAmount() > (withDrawalNotice.getProduct().getCurrentBalance() * (90.0/100.0))){
             throw new Exception("You cannot withdraw more than 90% of the current balance");
         }
@@ -47,7 +47,7 @@ public class InvestorService {
 
         // send notification
         notification.setClosingBalance(withDrawalNotice.getProduct().getCurrentBalance());
-
+        return notification;
     }
 
     public Optional<WithDrawalNotice> findById(long id){

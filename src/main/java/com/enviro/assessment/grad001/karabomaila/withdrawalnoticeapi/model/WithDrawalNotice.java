@@ -27,12 +27,10 @@ public class WithDrawalNotice {
     @Column(name = "product_type")
     private String productType;
 
-    @Column(name = "processed")
-    private boolean processed;
-
     @OneToOne(mappedBy = "notice", cascade = CascadeType.ALL)
     private BankAccountInfo bankAccountInfo;
 
-    @OneToOne(mappedBy = "notice", cascade = CascadeType.MERGE)
+    @OneToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "product_id", referencedColumnName = "id")
     private Product product;
 }

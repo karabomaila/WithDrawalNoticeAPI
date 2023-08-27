@@ -28,7 +28,7 @@ public class Product {
     @JoinColumn(name = "investor_id")
     private Investor investor;
 
-    @OneToOne
-    @JoinColumn(name = "notice_id", referencedColumnName = "id")
-    private WithDrawalNotice notice;
+    public void addToCurrentBalance(double amount){
+        currentBalance += amount;
+    }
 }

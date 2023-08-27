@@ -7,6 +7,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -56,12 +57,19 @@ public class Investor {
 
     public Product getProductByType(String productType){
         for (Product product: products){
-            if (product.getType().equals(productType)) return product;
+            if (product.getType().equalsIgnoreCase(productType)) return product;
         }
         return null;
     }
 
     public void UpdateAge() {
         age++;
+    }
+
+    public void addProduct(Product product) {
+        if (products == null){
+            products = new ArrayList<>();
+        }
+        products.add(product);
     }
 }
