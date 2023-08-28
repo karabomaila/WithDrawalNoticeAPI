@@ -25,8 +25,11 @@ public class InvestorAPI {
     }
 
     @GetMapping("/investor")
-    public Optional<Investor> retrieveInvestor(@RequestParam(required = true) long investorId){
-        return investorService.findInvestorById(investorId);
+    public ResponseEntity retrieveInvestor(@RequestParam(required = true) long investorId){
+        Optional<Investor> investor = investorService.findInvestorById(investorId);
+        if (investor.isEmpty()) return new ResponseEntity("The investor was not found", HttpStatus.NOT_FOUND);
+
+        return new ResponseEntity<>(investor.get(), HttpStatus.OK);
     }
 
     @PostMapping("/investor")
@@ -62,7 +65,7 @@ public class InvestorAPI {
     }
 
     @PostMapping("/notice")
-    public Notification createNotice(@RequestParam(required = true) long investorId,
+    public ResponseEntity<Notification> createNotice(@RequestParam(required = true) long investorId,
                                      @RequestParam(required = true) String productType,
                                      @RequestParam(required = true) double amount,
                                      @RequestParam(required = true) LocalDate date,
@@ -91,7 +94,13 @@ public class InvestorAPI {
         withDrawalNotice.setProduct(investor.get().getProductByType(productType));
         withDrawalNotice.setProductType(productType.toUpperCase());
 
-        return investorService.addNotice(withDrawalNotice);
+        try {
+            Notification notification = investorService.addNotice(withDrawalNotice);
+            return new ResponseEntity(notification, HttpStatus.OK);
+        }catch (Exception e){
+            e.printStackTrace();
+            return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/statements")
